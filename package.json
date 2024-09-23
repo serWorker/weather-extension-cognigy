@@ -1,13 +1,12 @@
 {
   "name": "weather-extension",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "Integrates the weather api with Cognigy.AI",
   "main": "build/module.js",
   "scripts": {
     "transpile": "tsc -p .",
     "zip": "tar cfz sergiuweatherextension.tar.gz build/* package.json package-lock.json README.md icon.png",
-    "build": "npm run transpile && npm run lint && npm run zip",
-    "lint": "tslint -c tslint.json src/**/*.ts"
+    "build": "npm run transpile && npm run zip"
   },
   "keywords": [
     "Weather"
@@ -16,13 +15,11 @@
   "license": "MIT",
   "dependencies": {
     "@cognigy/extension-tools": "^0.13.0",
-    "axios": "^0.21.2",
-    "tslint": "^6.1.3"
+    "axios": "^1.7.7"
   },
   "devDependencies": {
-    "@types/axios": "^0.14.0",
     "@types/node": "^13.13.15",
-    "typescript": "^3.8.3"
+    "typescript": "^4.5.0"
   },
   "repository": {
     "type": "git",

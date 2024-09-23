@@ -107,14 +107,14 @@ export const getWeather = createNodeDescriptor({
 		const { api } = cognigy;
 		const { connection, city, storeLocation, inputKey, contextKey } = config;
 		const { key } = connection;
-
+	
 		try {
 			// Fetch weather data from WeatherAPI
 			const response = await axios({
 				method: 'get',
 				url: `http://api.weatherapi.com/v1/current.json?key=${key}&q=${encodeURI(city)}`
 			});
-
+	
 			// Extract relevant weather information
 			const weatherData = response.data;
 			const temperature = weatherData.current.temp_c;
@@ -123,8 +123,8 @@ export const getWeather = createNodeDescriptor({
 			const humidity = weatherData.current.humidity;
 			const cityName = weatherData.location.name;
 			const countryName = weatherData.location.country;
-
-			// Create a structured output message
+	
+			// Create structured weather data
 			const weatherReport = `
 				Weather in ${cityName}, ${countryName}:
 				- Temperature: ${temperature}°C
@@ -132,29 +132,61 @@ export const getWeather = createNodeDescriptor({
 				- Wind Speed: ${windSpeed} km/h
 				- Humidity: ${humidity}%
 			`;
-
-			// Store full data and return structured response
+	
+			// Check the channel and send appropriate response
+			if (cognigy.input.channel === 'microsoft-teams') {
+				// Create a Teams Adaptive Card
+				const weatherCard = {
+					"type": "AdaptiveCard",
+					"version": "1.0",
+					"body": [
+						{
+							"type": "TextBlock",
+							"text": `Weather in ${cityName}, ${countryName}`,
+							"size": "large",
+							"weight": "bolder"
+						},
+						{
+							"type": "FactSet",
+							"facts": [
+								{ "title": "Temperature", "value": `${temperature}°C` },
+								{ "title": "Condition", "value": `${condition}` },
+								{ "title": "Wind Speed", "value": `${windSpeed} km/h` },
+								{ "title": "Humidity", "value": `${humidity}%` }
+							]
+						}
+					],
+					"msteams": {
+						"width": "full"
+					}
+				};
+	
+				// Send the Adaptive Card back to the user in Teams
+				api.say("", { card: weatherCard });
+			} else {
+				// For other channels, send a plain text message
+				api.say(weatherReport);
+			}
+	
+			// Store full weather data
 			if (storeLocation === "context") {
 				api.addToContext(contextKey, weatherData, "simple");
 			} else {
-				api.addToInput(inputKey, weatherData);
+				cognigy.input[inputKey] = weatherData;
 			}
-
-			// Send the structured weather report back to the user
-			api.say(weatherReport);
-
+	
 		} catch (error) {
 			const errorMessage = "I couldn't retrieve the weather data. Please try again later.";
-			
-			// Handle errors and store them in context or input
+	
+			// Store error in context or input
 			if (storeLocation === "context") {
 				api.addToContext(contextKey, { error: errorMessage }, "simple");
 			} else {
-				api.addToInput(inputKey, { error: errorMessage });
+				cognigy.input[inputKey] = { error: errorMessage };
 			}
-
+	
 			// Send error message back to the user
 			api.say(errorMessage);
 		}
-	}
+	}	
 });
